@@ -1,0 +1,62 @@
+# this is an example of the Uber API
+# as a demonstration of an API spec in YAML
+swagger: '2.0'
+info:
+  title: My API
+  description: Here your first example
+  version: "1.0.0"
+# the domain of the service
+host: api.uber.com
+# array of all schemes that your API supports
+schemes:
+  - https
+# will be prefixed to all paths
+basePath: /v1
+produces:
+  - application/json
+paths:
+  /example:
+    get:
+      summary: Example Summary
+      description: |
+        This is a example of description
+      parameters:
+        - name: field1
+          in: query
+          description: Field number one.
+          required: true
+          type: number
+          format: double
+      tags:
+        - Example
+      responses:
+        200:
+          description: An array 
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Example'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+definitions:
+  Example:
+    type: object
+    properties:
+      example_id:
+        type: string
+        description: Unique identifier.
+      description:
+        type: string
+        description: Description.
+  Error:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+      fields:
+        type: string
