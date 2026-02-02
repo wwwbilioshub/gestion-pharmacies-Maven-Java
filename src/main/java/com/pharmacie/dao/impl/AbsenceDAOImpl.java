@@ -95,20 +95,23 @@ public class AbsenceDAOImpl implements AbsenceDAO {
 	@Override
 	public List<Absence> findAll(){
 		// Implementation de la recuperation de toutes les absences
-		String sql = "SELECT * FROM absence";
-		List<Absence> absences = new java.util.ArrayList<>();
-		
-		try(Connection conn = DatabaseConnection.getConnection();
-			PreparedStatement stmt = conn.prepareStatement(sql);
-			ResultSet rs = stmt.executeQuery()){
-			
-			while(rs.next()) {
-				Absence absence = mapResultSetToAbsence(rs);
-				absences.add(absence);
-			}
-		}catch(SQLException e) {
-			throw new RuntimeException("Erreur lors de la récupération des absences", e);
-		}
+		List<Absence> absences = new ArrayList<>();
+	    String sql = "SELECT a.*, CONCAT(e.prenom, ' ', e.nom) as nom_employe FROM absence a " +
+	                 "LEFT JOIN employe e ON a.id_employe = e.id_employe " +
+	                 "ORDER BY a.date_debut DESC";
+	    
+	    try (Connection conn = DatabaseConnection.getConnection();
+	         Statement stmt = conn.createStatement();
+	         ResultSet rs = stmt.executeQuery(sql)) {
+	        
+	        while (rs.next()) {
+	            absences.add(mapResultSetToAbsence(rs));
+	        }
+	        
+	    } catch (SQLException e) {
+	        throw new RuntimeException("Erreur lors de la récupération des absences", e);
+	    }
+	    
 		
 		return absences;
 	}
@@ -116,16 +119,18 @@ public class AbsenceDAOImpl implements AbsenceDAO {
 	@Override 
 	public Optional<Absence> findById(Long idAbsence){
 		// Implementation de la recuperation d'une absence par son id
-		String sql = "SELECT * FROM absence WHERE id_absence = ?";
-		
-		try(Connection conn = DatabaseConnection.getConnection();
-			PreparedStatement stmt = conn.prepareStatement(sql)){
-			
+		String sql = "SELECT a.*, CONCAT(e.prenom, ' ', e.nom) as nom_employe FROM absence a " +
+                 "LEFT JOIN employe e ON a.id_employe = e.id_employe " +
+                 "WHERE a.id_absence = ?";
+    
+		try (Connection conn = DatabaseConnection.getConnection();
+			 PreparedStatement stmt = conn.prepareStatement(sql)) {
+        
 			stmt.setLong(1, idAbsence);
-			try(ResultSet rs =  stmt.executeQuery()){
-				if(rs.next()) {
-					Absence absence = mapResultSetToAbsence(rs);
-					return Optional.of(absence);
+        
+			try (ResultSet rs = stmt.executeQuery()) {
+				if (rs.next()) {
+                return Optional.of(mapResultSetToAbsence(rs));
 				}
 			}
 			
@@ -177,7 +182,9 @@ public class AbsenceDAOImpl implements AbsenceDAO {
 	@Override 
 	public List<Absence> findByEmploye(Long idEmploye){
 		List<Absence> absences = new ArrayList<>();
-		String sql = "SELECT * FROM absence WHERE id_employe = ?";
+		String sql = "SELECT a.*, CONCAT(e.prenom, ' ', e.nom) as nom_employe FROM absence a " +
+                	 "LEFT JOIN employe e ON a.id_employe = e.id_employe " +
+                     "WHERE a.id_employe = ? ORDER BY a.date_debut DESC";
 		
 		try(Connection conn = DatabaseConnection.getConnection();
 			PreparedStatement stmt = conn.prepareStatement(sql)){
@@ -198,7 +205,9 @@ public class AbsenceDAOImpl implements AbsenceDAO {
 	@Override
 	public List<Absence> findByPeriode(LocalDate debut, LocalDate fin){
 		List<Absence> absences = new ArrayList<>();
-		String sql = "SELECT * FROM absence WHERE date_debut >= ? AND date_fin <= ?";
+		String sql = "SELECT a.*, CONCAT(e.prenom, ' ', e.nom) as nom_employe FROM absence a " +
+                     "LEFT JOIN employe e ON a.id_employe = e.id_employe " +
+                     "WHERE a.date_debut <= ? AND a.date_fin >= ? ORDER BY a.date_debut";
 		
 		try(Connection conn = DatabaseConnection.getConnection();
 			PreparedStatement stmt = conn.prepareStatement(sql)){
@@ -220,7 +229,9 @@ public class AbsenceDAOImpl implements AbsenceDAO {
 	@Override 
 	public List<Absence> findEnAttenteApprobation(){
 		List<Absence> absences = new ArrayList<>();
-		String sql = "SELECT * FROM absence WHERE approuvee = false";
+		String sql = "SELECT a.*, CONCAT(e.prenom, ' ', e.nom) as nom_employe FROM absence a " +
+                     "LEFT JOIN employe e ON a.id_employe = e.id_employe " +
+                     "WHERE a.approuvee = false ORDER BY a.date_creation";
 		
 		try(Connection conn = DatabaseConnection.getConnection();
 			PreparedStatement stmt = conn.prepareStatement(sql);
@@ -239,7 +250,9 @@ public class AbsenceDAOImpl implements AbsenceDAO {
 	@Override
 	public List<Absence> findNonJustifiees(){
 		List<Absence> absences = new ArrayList<>();
-		String sql = "SELECT * FROM absence WHERE justifiee = false";
+		String sql = "SELECT a.*, CONCAT(e.prenom, ' ', e.nom) as nom_employe FROM absence a " +
+                "LEFT JOIN employe e ON a.id_employe = e.id_employe " +
+                "WHERE a.justifiee = false ORDER BY a.date_debut DESC";
 		
 		try(Connection conn = DatabaseConnection.getConnection();
 			PreparedStatement stmt = conn.prepareStatement(sql);
