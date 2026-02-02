@@ -5,7 +5,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 
 public class Absence {
-	 private Long idAbsence;
+	 	private Long idAbsence;
 	    private Long idEmploye;
 	    private LocalDate dateDebut;
 	    private LocalDate dateFin;
