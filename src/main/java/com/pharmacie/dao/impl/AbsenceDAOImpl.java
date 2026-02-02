@@ -11,6 +11,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -192,6 +193,106 @@ public class AbsenceDAOImpl implements AbsenceDAO {
 			throw new RuntimeException("Erreur lors de la recherche des absences de l'employe", e);
 		}
 		return absences;
+	}
+	
+	@Override
+	public List<Absence> findByPeriode(LocalDate debut, LocalDate fin){
+		List<Absence> absences = new ArrayList<>();
+		String sql = "SELECT * FROM absence WHERE date_debut >= ? AND date_fin <= ?";
+		
+		try(Connection conn = DatabaseConnection.getConnection();
+			PreparedStatement stmt = conn.prepareStatement(sql)){
+			
+			stmt.setDate(1, Date.valueOf(debut));
+			stmt.setDate(2, Date.valueOf(fin));
+			try(ResultSet rs = stmt.executeQuery()){
+				while(rs.next()) {
+					absences.add(mapResultSetToAbsence(rs));
+				}
+			}
+				
+		}catch(SQLException e) {
+			throw new RuntimeException("Erreur lors de la recherche des absences par période", e);
+		}
+		return absences;
+	}
+	
+	@Override 
+	public List<Absence> findEnAttenteApprobation(){
+		List<Absence> absences = new ArrayList<>();
+		String sql = "SELECT * FROM absence WHERE approuvee = false";
+		
+		try(Connection conn = DatabaseConnection.getConnection();
+			PreparedStatement stmt = conn.prepareStatement(sql);
+			ResultSet rs = stmt.executeQuery()){
+			
+			while(rs.next()) {
+				absences.add(mapResultSetToAbsence(rs));
+			}
+				
+		}catch(SQLException e) {
+			throw new RuntimeException("Erreur lors de la recherche des absences en attente d'approbation", e);
+		}
+		return absences;
+	}
+	
+	@Override
+	public List<Absence> findNonJustifiees(){
+		List<Absence> absences = new ArrayList<>();
+		String sql = "SELECT * FROM absence WHERE justifiee = false";
+		
+		try(Connection conn = DatabaseConnection.getConnection();
+			PreparedStatement stmt = conn.prepareStatement(sql);
+			ResultSet rs = stmt.executeQuery()){
+			
+			while(rs.next()) {
+				absences.add(mapResultSetToAbsence(rs));
+			}
+				
+		}catch(SQLException e) {
+			throw new RuntimeException("Erreur lors de la recherche des absences non justifiées", e);
+		}
+		return absences;
+	}
+	
+	@Override
+	public boolean updateApprobation(Long id, boolean approuvee) {
+		String sql = "UPDATE absence SET approuvee = ? WHERE id_absence = ?";
+		
+		try(Connection conn = DatabaseConnection.getConnection();
+			PreparedStatement stmt = conn.prepareStatement(sql)){
+			
+			stmt.setBoolean(1, approuvee);
+			stmt.setLong(2, id);
+			int rowsUpdated = stmt.executeUpdate();
+			return rowsUpdated > 0;
+			
+		}catch(SQLException e) {
+			throw new RuntimeException("Erreur lors de la mise à jour de l'approbation de l'absence", e);
+		}
+	}
+	
+	@Override
+	public long countJoursAbsence(Long idEmploye, LocalDate debut, LocalDate fin) {
+		String sql = "SELECT SUM(DATEDIFF(date_fin, date_debut) + 1) AS total_jours FROM absence WHERE id_employe = ? AND date_debut >= ? AND date_fin <= ? AND approuvee = true";
+		
+		try(Connection conn = DatabaseConnection.getConnection();
+			PreparedStatement stmt = conn.prepareStatement(sql)){
+			
+			stmt.setLong(1, idEmploye);
+			stmt.setDate(2, Date.valueOf(debut));
+			stmt.setDate(3, Date.valueOf(fin));
+			try(ResultSet rs = stmt.executeQuery()){
+				if(rs.next()) {
+					return rs.getLong("total_jours");
+				}
+			}
+			
+		}catch(SQLException e) {
+			throw new RuntimeException("Erreur lors du comptage des jours d'absence", e);
+		}
+		return 0;
+		
 	}
 	
 	private Absence mapResultSetToAbsence(ResultSet rs) throws SQLException {
