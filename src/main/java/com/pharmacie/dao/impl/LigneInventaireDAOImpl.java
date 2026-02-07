@@ -158,6 +158,31 @@ public class LigneInventaireDAOImpl implements LigneInventaireDAO {
         return false;
     }
     
+    @Override
+    public List<LigneInventaire> findByInventaire(Long idInventaire) {
+		List<LigneInventaire> lignes = new ArrayList<>();
+		String sql = "SELECT li.*, p.nom as nom_produit, p.categorie, p.reference " +
+					 "FROM ligne_inventaire li " +
+					 "LEFT JOIN produit p ON li.id_produit = p.id_produit " +
+					 "WHERE li.id_inventaire = ?";
+		
+		try (Connection conn = DatabaseConnection.getConnection();
+			 PreparedStatement stmt = conn.prepareStatement(sql)) {
+			
+			stmt.setLong(1, idInventaire);
+			
+			try (ResultSet rs = stmt.executeQuery()) {
+				while (rs.next()) {
+					lignes.add(mapResultSetToEntity(rs));
+				}
+			}
+			
+		} catch (SQLException e) {
+			throw new RuntimeException("Erreur lors de la récupération des lignes d'inventaire par ID d'inventaire", e);
+		}
+		
+		return lignes;
+	}
     
    
     private LigneInventaire mapResultSetToEntity(ResultSet rs) throws SQLException {

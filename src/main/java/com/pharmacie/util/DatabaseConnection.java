@@ -31,7 +31,7 @@ public class DatabaseConnection {
 	        // Configuration de la base de données
 	        config.setJdbcUrl(props.getProperty("db.url", "jdbc:mysql://localhost:3306/gestion_pharmacies"));
 	        config.setUsername(props.getProperty("db.username", "root"));
-	        config.setPassword(props.getProperty("db.password", ""));
+	        config.setPassword(props.getProperty("db.password", "root"));
 	        config.setDriverClassName(props.getProperty("db.driver", "com.mysql.cj.jdbc.Driver"));
 	        
 	        // Configuration du pool de connexions

@@ -1,5 +1,6 @@
 package com.pharmacie.dao.impl;
 import com.pharmacie.dao.interfaces.UtilisateurDAO;
+
 import com.pharmacie.model.Utilisateur;
 import com.pharmacie.enums.RoleUtilisateur;
 import com.pharmacie.util.DatabaseConnection;
@@ -20,7 +21,7 @@ public class UtilisateurDAOImpl implements UtilisateurDAO{
 	            
 	            stmt.setString(1, utilisateur.getLogin());
 	            // Hasher le mot de passe avant de l'enregistrer
-	            String hashedPassword = BCrypt.hashpw(utilisateur.getMotDePasse(), BCrypt.gensalt());
+	            String hashedPassword = BCrypt.hashpw(utilisateur.getMotDePasse(), BCrypt.gensalt(12));
 	            stmt.setString(2, hashedPassword);
 	            stmt.setString(3, utilisateur.getRole().name());
 	            
@@ -198,9 +199,9 @@ public class UtilisateurDAOImpl implements UtilisateurDAO{
 	    public Optional<Utilisateur> authenticate(String login, String motDePasse) {
 	        Optional<Utilisateur> userOpt = findByLogin(login);
 	        
-	        if (userOpt.isPresent()) {
+	        if (userOpt.isPresent() && BCrypt.checkpw(motDePasse,userOpt.get().getMotDePasse()) ){
 	            Utilisateur user = userOpt.get();
-	            if (user.isActif() && BCrypt.checkpw(motDePasse, user.getMotDePasse())) {
+	            if (user.isActif()) {
 	                updateDerniereConnexion(user.getIdUtilisateur());
 	                return Optional.of(user);
 	            }
